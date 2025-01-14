@@ -1,39 +1,128 @@
-import React from 'react';
-import { FlutterWaveButton, closePaymentModal } from 'flutterwave-react-v3';
+import React, { useState } from 'react';
+import axios from 'axios';
 
-export default function App() {
-  const config = {
-    public_key: 'FLWPUBK_TEST-9ac34838c5e874331fb1501b017b867a-X',
-    tx_ref: Date.now(),
-    amount: 100,
-    currency: 'RWF', // Change this to RWF
-    payment_options: 'card,mobilemoney',
-    customer: {
-      email: 'user@gmail.com',
-      phone_number: '+250781234567',
-      name: 'john doe',
-    },
-    customizations: {
-      title: 'My store',
-      description: 'Payment for items in cart',
-      logo: 'https://st2.depositphotos.com/4403291/7418/v/450/depositphotos_74189661-stock-illustration-online-shop-log.jpg',
-    },
+const App = () => {
+  const [email, setEmail] = useState('');
+  const [phone_number, setPhoneNumber] = useState('');
+  const [fullname, setFullname] = useState('');
+  const [card_number, setCardNumber] = useState('');
+  const [cvv, setCvv] = useState('');
+  const [expiry_month, setExpiryMonth] = useState('');
+  const [expiry_year, setExpiryYear] = useState('');
+  const [amount, setAmount] = useState('');
+  const [tx_ref, setTxRef] = useState('');
+
+  const handleMobileMoneySubmit = async () => {
+    try {
+      const response = await axios.post('http://localhost:5000/mobile-money', {
+        email,
+        phone_number,
+        fullname
+      });
+      
+      if (response.data.redirectUrl) {
+        // Redirect the user to the Flutterwave checkout page
+        window.location.href = response.data.redirectUrl;
+      } else {
+        console.log('Mobile Money Response:', response.data);
+      }
+    } catch (error) {
+      console.error('Mobile Money Error:', error);
+    }
   };
 
-  const fwConfig = {
-    ...config,
-    text: 'Pay with Flutterwave!',
-    callback: (response) => {
-       console.log(response);
-      closePaymentModal() // this will close the modal programmatically
-    },
-    onClose: () => {},
+  const handleCardChargeSubmit = async () => {
+    try {
+      const response = await axios.post('http://localhost:5000/charge-card', {
+        card_number,
+        cvv,
+        expiry_month,
+        expiry_year,
+        amount,
+        tx_ref,
+        email,
+        phone_number,
+        fullname,
+        redirect_url: "https://www.google.com" // Or wherever you want to redirect after payment
+      });
+      console.log('Card Charge Response:', response.data);
+
+      // If 3DS or PIN authorization is required
+      if (response.data.redirectUrl) {
+        window.location.href = response.data.redirectUrl;
+      }
+    } catch (error) {
+      console.error('Card Charge Error:', error);
+    }
   };
 
   return (
-    <div className="App">
-     <h1>Hello Test user</h1>
-      <FlutterWaveButton {...fwConfig} />
+    <div>
+      <h1>Payment Demo</h1>
+
+      {/* Mobile Money Form */}
+      <h2>Mobile Money Payment</h2>
+      <input
+        type="text"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <input
+        type="text"
+        placeholder="Phone Number"
+        value={phone_number}
+        onChange={(e) => setPhoneNumber(e.target.value)}
+      />
+      <input
+        type="text"
+        placeholder="Full Name"
+        value={fullname}
+        onChange={(e) => setFullname(e.target.value)}
+      />
+      <button onClick={handleMobileMoneySubmit}>Submit Mobile Money</button>
+
+      {/* Card Payment Form */}
+      <h2>Card Payment</h2>
+      <input
+        type="text"
+        placeholder="Card Number"
+        value={card_number}
+        onChange={(e) => setCardNumber(e.target.value)}
+      />
+      <input
+        type="text"
+        placeholder="CVV"
+        value={cvv}
+        onChange={(e) => setCvv(e.target.value)}
+      />
+      <input
+        type="text"
+        placeholder="Expiry Month"
+        value={expiry_month}
+        onChange={(e) => setExpiryMonth(e.target.value)}
+      />
+      <input
+        type="text"
+        placeholder="Expiry Year"
+        value={expiry_year}
+        onChange={(e) => setExpiryYear(e.target.value)}
+      />
+      <input
+        type="text"
+        placeholder="Amount"
+        value={amount}
+        onChange={(e) => setAmount(e.target.value)}
+      />
+      <input
+        type="text"
+        placeholder="Transaction Reference"
+        value={tx_ref}
+        onChange={(e) => setTxRef(e.target.value)}
+      />
+      <button onClick={handleCardChargeSubmit}>Submit Card Payment</button>
     </div>
   );
-}
+};
+
+export default App;
