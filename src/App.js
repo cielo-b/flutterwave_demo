@@ -14,7 +14,7 @@ const App = () => {
 
   const handleMobileMoneySubmit = async () => {
     try {
-      const response = await axios.post('http://localhost:5000/mobile-money', {
+      const response = await axios.post('https://flutterwave-api.onrender.com/mobile-money', {
         email,
         phone_number,
         fullname
@@ -33,7 +33,7 @@ const App = () => {
 
   const handleCardChargeSubmit = async () => {
     try {
-      const response = await axios.post('http://localhost:5000/charge-card', {
+      const response = await axios.post('https://flutterwave-api.onrender.com/charge-card', {
         card_number,
         cvv,
         expiry_month,
